@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useId, useState } from "react";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { TodoCreate } from "../services/types";
 import { todoFormSchema } from "@/lib/schemas";
@@ -7,14 +7,7 @@ import type { TodoFormValues } from "@/lib/schemas";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+import { Label } from "@/components/ui/label";
 
 interface TodoFormProps {
   onSubmit: (data: TodoCreate) => Promise<void>;
@@ -31,9 +24,16 @@ export function TodoForm({
   initialDescription = "",
   submitLabel = "Add To-do",
 }: TodoFormProps) {
+  const titleId = useId();
+  const descriptionId = useId();
   const [serverError, setServerError] = useState<string | null>(null);
 
-  const form = useForm<TodoFormValues>({
+  const {
+    control,
+    handleSubmit,
+    reset,
+    formState: { isSubmitting, errors },
+  } = useForm<TodoFormValues>({
     resolver: zodResolver(todoFormSchema),
     defaultValues: {
       title: initialTitle,
@@ -41,76 +41,84 @@ export function TodoForm({
     },
   });
 
-  const handleSubmit = async (values: TodoFormValues) => {
+  const handleFormSubmit = async (values: TodoFormValues) => {
     setServerError(null);
     try {
       await onSubmit({
         title: values.title,
         description: values.description || undefined,
       });
-      form.reset({ title: "", description: "" });
+      reset({ title: "", description: "" });
     } catch (err) {
       setServerError(err instanceof Error ? err.message : "Something went wrong");
     }
   };
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-3">
-        {serverError && (
-          <p className="text-sm text-destructive bg-destructive/10 px-3 py-2 rounded-md">
-            {serverError}
-          </p>
-        )}
+    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-3">
+      {serverError && (
+        <p className="text-sm text-destructive bg-destructive/10 px-3 py-2 rounded-md">
+          {serverError}
+        </p>
+      )}
 
-        <FormField
-          control={form.control}
+      <div className="space-y-1">
+        <Label htmlFor={titleId}>Title</Label>
+        <Controller
+          control={control}
           name="title"
           render={({ field }) => (
-            <FormItem>
-              <FormLabel>Title</FormLabel>
-              <FormControl>
-                <Input placeholder="Title *" maxLength={255} {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
+            <Input
+              id={titleId}
+              placeholder="Title *"
+              maxLength={255}
+              aria-invalid={!!errors.title}
+              aria-describedby={errors.title ? `${titleId}-error` : undefined}
+              {...field}
+            />
           )}
         />
+        {errors.title && (
+          <p id={`${titleId}-error`} className="text-sm font-medium text-destructive">
+            {errors.title.message}
+          </p>
+        )}
+      </div>
 
-        <FormField
-          control={form.control}
+      <div className="space-y-1">
+        <Label htmlFor={descriptionId}>Description</Label>
+        <Controller
+          control={control}
           name="description"
           render={({ field }) => (
-            <FormItem>
-              <FormLabel>Description</FormLabel>
-              <FormControl>
-                <Textarea
-                  placeholder="Description (optional)"
-                  rows={2}
-                  maxLength={1000}
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
+            <Textarea
+              id={descriptionId}
+              placeholder="Description (optional)"
+              rows={2}
+              maxLength={1000}
+              aria-invalid={!!errors.description}
+              aria-describedby={errors.description ? `${descriptionId}-error` : undefined}
+              {...field}
+            />
           )}
         />
+        {errors.description && (
+          <p id={`${descriptionId}-error`} className="text-sm font-medium text-destructive">
+            {errors.description.message}
+          </p>
+        )}
+      </div>
 
-        <div className="flex gap-2">
-          <Button
-            type="submit"
-            disabled={form.formState.isSubmitting}
-            className="flex-1"
-          >
-            {form.formState.isSubmitting ? "Saving…" : submitLabel}
+      <div className="flex gap-2">
+        <Button type="submit" disabled={isSubmitting} className="flex-1">
+          {isSubmitting ? "Saving…" : submitLabel}
+        </Button>
+        {onCancel && (
+          <Button type="button" variant="outline" onClick={onCancel}>
+            Cancel
           </Button>
-          {onCancel && (
-            <Button type="button" variant="outline" onClick={onCancel}>
-              Cancel
-            </Button>
-          )}
-        </div>
-      </form>
-    </Form>
+        )}
+      </div>
+    </form>
   );
 }
