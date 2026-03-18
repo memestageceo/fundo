@@ -13,7 +13,7 @@ export default defineConfig({
   server: {
     port: 5173,
     proxy: {
-      "/todos": "http://localhost:8000",
+      "/todos": process.env.API_BASE_URL ?? "http://localhost:8000",
     },
   },
 });
