@@ -3,6 +3,9 @@ import type { Todo } from "../services/types";
 import { todosApi } from "../services/api";
 import { TodoForm } from "../components/TodoForm";
 import { TodoItem } from "../components/TodoItem";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 type Filter = "all" | "active" | "completed";
 
@@ -57,55 +60,67 @@ export function Dashboard() {
   const activeCount = todos.filter((t) => !t.completed).length;
   const completedCount = todos.filter((t) => t.completed).length;
 
+  const filterCounts: Record<Filter, number> = {
+    all: todos.length,
+    active: activeCount,
+    completed: completedCount,
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-50">
       <div className="max-w-2xl mx-auto px-4 py-10">
         {/* Header */}
         <header className="mb-8 text-center">
-          <h1 className="text-4xl font-bold text-indigo-700 tracking-tight">Fundo</h1>
-          <p className="mt-1 text-gray-500 text-sm">A minimal to-do dashboard</p>
+          <h1 className="text-4xl font-bold text-primary tracking-tight">Fundo</h1>
+          <p className="mt-1 text-muted-foreground text-sm">A minimal to-do dashboard</p>
         </header>
 
         {/* Create Form */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 mb-6">
-          <h2 className="text-sm font-semibold text-gray-700 mb-3">New To-do</h2>
-          <TodoForm onSubmit={handleCreate} submitLabel="Add To-do" />
-        </div>
+        <Card className="mb-6">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-semibold">New To-do</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <TodoForm onSubmit={handleCreate} submitLabel="Add To-do" />
+          </CardContent>
+        </Card>
 
-        {/* Stats */}
+        {/* Filter Tabs */}
         <div className="grid grid-cols-3 gap-3 mb-6">
           {(["all", "active", "completed"] as Filter[]).map((f) => (
-            <button
+            <Button
               key={f}
+              variant={filter === f ? "default" : "outline"}
               onClick={() => setFilter(f)}
-              className={`rounded-xl py-2.5 text-sm font-medium transition-colors ${
-                filter === f
-                  ? "bg-indigo-600 text-white shadow-sm"
-                  : "bg-white text-gray-500 border border-gray-100 hover:border-indigo-200"
-              }`}
+              className="flex flex-col h-auto py-2.5 gap-0"
             >
-              <span className="block text-lg font-bold">
-                {f === "all" ? todos.length : f === "active" ? activeCount : completedCount}
-              </span>
-              <span className="capitalize">{f}</span>
-            </button>
+              <Badge
+                variant={filter === f ? "secondary" : "outline"}
+                className="text-lg font-bold px-2 py-0 mb-0.5 pointer-events-none"
+              >
+                {filterCounts[f]}
+              </Badge>
+              <span className="text-xs capitalize">{f}</span>
+            </Button>
           ))}
         </div>
 
         {/* To-do List */}
         {loading && (
-          <p className="text-center text-gray-400 py-8 text-sm">Loading…</p>
+          <p className="text-center text-muted-foreground py-8 text-sm">Loading…</p>
         )}
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl p-4 text-sm mb-4">
-            {error}
-            <button onClick={fetchTodos} className="ml-2 underline text-red-600 hover:text-red-800">
-              Retry
-            </button>
-          </div>
+          <Card className="border-destructive mb-4">
+            <CardContent className="p-4 text-sm text-destructive flex items-center gap-2">
+              {error}
+              <Button variant="link" onClick={fetchTodos} className="p-0 h-auto text-destructive underline">
+                Retry
+              </Button>
+            </CardContent>
+          </Card>
         )}
         {!loading && !error && filteredTodos.length === 0 && (
-          <p className="text-center text-gray-400 py-10 text-sm">
+          <p className="text-center text-muted-foreground py-10 text-sm">
             {filter === "all"
               ? "No to-dos yet. Add one above!"
               : `No ${filter} to-dos.`}
