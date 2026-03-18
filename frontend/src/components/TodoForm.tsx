@@ -1,5 +1,8 @@
 import { useState } from "react";
 import type { TodoCreate } from "../services/types";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 
 interface TodoFormProps {
   onSubmit: (data: TodoCreate) => Promise<void>;
@@ -40,45 +43,39 @@ export function TodoForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
       {error && (
-        <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded">{error}</p>
+        <p className="text-sm text-destructive bg-destructive/10 px-3 py-2 rounded-md">{error}</p>
       )}
-      <div>
-        <input
-          type="text"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="Title *"
-          required
-          maxLength={255}
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
-        />
-      </div>
-      <div>
-        <textarea
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          placeholder="Description (optional)"
-          rows={2}
-          maxLength={1000}
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 resize-none"
-        />
-      </div>
+      <Input
+        type="text"
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+        placeholder="Title *"
+        required
+        maxLength={255}
+      />
+      <Textarea
+        value={description}
+        onChange={(e) => setDescription(e.target.value)}
+        placeholder="Description (optional)"
+        rows={2}
+        maxLength={1000}
+      />
       <div className="flex gap-2">
-        <button
+        <Button
           type="submit"
           disabled={loading || !title.trim()}
-          className="flex-1 bg-indigo-600 text-white text-sm font-medium py-2 px-4 rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="flex-1"
         >
           {loading ? "Saving…" : submitLabel}
-        </button>
+        </Button>
         {onCancel && (
-          <button
+          <Button
             type="button"
+            variant="outline"
             onClick={onCancel}
-            className="px-4 py-2 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
           >
             Cancel
-          </button>
+          </Button>
         )}
       </div>
     </form>
