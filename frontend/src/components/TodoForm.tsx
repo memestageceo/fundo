@@ -6,8 +6,18 @@ import { todoFormSchema } from "@/lib/schemas";
 import type { TodoFormValues } from "@/lib/schemas";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
+import {
+  Field,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupText,
+  InputGroupTextarea,
+} from "@/components/ui/input-group";
 
 interface TodoFormProps {
   onSubmit: (data: TodoCreate) => Promise<void>;
@@ -24,16 +34,10 @@ export function TodoForm({
   initialDescription = "",
   submitLabel = "Add To-do",
 }: TodoFormProps) {
-  const titleId = useId();
-  const descriptionId = useId();
+  const formId = useId();
   const [serverError, setServerError] = useState<string | null>(null);
 
-  const {
-    control,
-    handleSubmit,
-    reset,
-    formState: { isSubmitting, errors },
-  } = useForm<TodoFormValues>({
+  const form = useForm<TodoFormValues>({
     resolver: zodResolver(todoFormSchema),
     defaultValues: {
       title: initialTitle,
@@ -48,70 +52,77 @@ export function TodoForm({
         title: values.title,
         description: values.description || undefined,
       });
-      reset({ title: "", description: "" });
+      form.reset({ title: "", description: "" });
     } catch (err) {
       setServerError(err instanceof Error ? err.message : "Something went wrong");
     }
   };
 
   return (
-    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-3">
+    <form id={formId} onSubmit={form.handleSubmit(handleFormSubmit)}>
       {serverError && (
-        <p className="text-sm text-destructive bg-destructive/10 px-3 py-2 rounded-md">
+        <p className="text-sm text-destructive bg-destructive/10 px-3 py-2 rounded-md mb-3">
           {serverError}
         </p>
       )}
 
-      <div className="space-y-1">
-        <Label htmlFor={titleId}>Title</Label>
+      <FieldGroup>
         <Controller
-          control={control}
           name="title"
-          render={({ field }) => (
-            <Input
-              id={titleId}
-              placeholder="Title *"
-              maxLength={255}
-              aria-invalid={!!errors.title}
-              aria-describedby={errors.title ? `${titleId}-error` : undefined}
-              {...field}
-            />
+          control={form.control}
+          render={({ field, fieldState }) => (
+            <Field data-invalid={fieldState.invalid}>
+              <FieldLabel htmlFor={`${formId}-title`}>Title</FieldLabel>
+              <Input
+                {...field}
+                id={`${formId}-title`}
+                placeholder="Title *"
+                maxLength={255}
+                aria-invalid={fieldState.invalid}
+                autoComplete="off"
+              />
+              <FieldError errors={[fieldState.error]} />
+            </Field>
           )}
         />
-        {errors.title && (
-          <p id={`${titleId}-error`} className="text-sm font-medium text-destructive">
-            {errors.title.message}
-          </p>
-        )}
-      </div>
 
-      <div className="space-y-1">
-        <Label htmlFor={descriptionId}>Description</Label>
         <Controller
-          control={control}
           name="description"
-          render={({ field }) => (
-            <Textarea
-              id={descriptionId}
-              placeholder="Description (optional)"
-              rows={2}
-              maxLength={1000}
-              aria-invalid={!!errors.description}
-              aria-describedby={errors.description ? `${descriptionId}-error` : undefined}
-              {...field}
-            />
+          control={form.control}
+          render={({ field, fieldState }) => (
+            <Field data-invalid={fieldState.invalid}>
+              <FieldLabel htmlFor={`${formId}-description`}>
+                Description
+              </FieldLabel>
+              <InputGroup>
+                <InputGroupTextarea
+                  {...field}
+                  id={`${formId}-description`}
+                  placeholder="Description (optional)"
+                  rows={2}
+                  maxLength={1000}
+                  aria-invalid={fieldState.invalid}
+                />
+                <InputGroupAddon align="block-end">
+                  <InputGroupText className="tabular-nums">
+                    {(field.value ?? "").length}/1000 characters
+                  </InputGroupText>
+                </InputGroupAddon>
+              </InputGroup>
+              <FieldError errors={[fieldState.error]} />
+            </Field>
           )}
         />
-        {errors.description && (
-          <p id={`${descriptionId}-error`} className="text-sm font-medium text-destructive">
-            {errors.description.message}
-          </p>
-        )}
-      </div>
+      </FieldGroup>
 
-      <div className="flex gap-2">
-        <Button type="submit" disabled={isSubmitting} className="flex-1">
-          {isSubmitting ? "Saving…" : submitLabel}
+      <div className="flex gap-2 mt-4">
+        <Button
+          type="submit"
+          form={formId}
+          disabled={form.formState.isSubmitting}
+          className="flex-1"
+        >
+          {form.formState.isSubmitting ? "Saving…" : submitLabel}
         </Button>
         {onCancel && (
           <Button type="button" variant="outline" onClick={onCancel}>
