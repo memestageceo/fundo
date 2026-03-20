@@ -1,8 +1,10 @@
+import os
+
 from sqlmodel import SQLModel, create_engine, Session
 
-DATABASE_URL = "sqlite:///./todos.db"
+DATABASE_URL = os.environ.get("DATABASE_URL", "sqlite://")
 
-engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
+engine = create_engine(DATABASE_URL)
 
 
 def create_db_and_tables() -> None:
