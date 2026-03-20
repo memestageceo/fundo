@@ -1,9 +1,31 @@
 services:
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: fundo
+      POSTGRES_PASSWORD: fundo
+      POSTGRES_DB: fundo
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fundo -d fundo"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
   backend:
     build:
       context: ./backend
     ports:
       - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql+psycopg2://fundo:fundo@db:5432/fundo
+    depends_on:
+      db:
+        condition: service_healthy
 
   frontend:
     build:
@@ -14,3 +36,6 @@ services:
       - API_BASE_URL=http://backend:8000
     depends_on:
       - backend
+
+volumes:
+  postgres_data:

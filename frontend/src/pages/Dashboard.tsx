@@ -7,6 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
+/**
+ * Filter for all active or completed. woohoo!
+ * */
 type Filter = "all" | "active" | "completed";
 
 export function Dashboard() {
